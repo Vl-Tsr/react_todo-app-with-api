@@ -12,6 +12,7 @@ type Props = {
   onSetEditingTodoId: React.Dispatch<React.SetStateAction<number>>;
   editingTodoInput: React.RefObject<HTMLInputElement>;
   onToggleTodo: (id: number) => Promise<void>;
+  onEditTodo: (id: number, title: string) => Promise<void>;
 };
 
 export const Main: React.FC<Props> = ({
@@ -24,6 +25,7 @@ export const Main: React.FC<Props> = ({
   tempTodoId,
   editingTodoInput,
   onToggleTodo,
+  onEditTodo,
 }) => {
   return (
     <section className="todoapp__main" data-cy="TodoList">
@@ -47,8 +49,15 @@ export const Main: React.FC<Props> = ({
             </label>
 
             {editingTodoId === todo.id && tempTodoId !== todo.id ? (
-              <form>
+              <form
+                onBlur={() => onEditTodo(todo.id, todo.title)}
+                onSubmit={e => {
+                  e.preventDefault();
+                  onEditTodo(todo.id, todo.title);
+                }}
+              >
                 <input
+                  onKeyDown={e => e.key === 'Escape' && e.currentTarget.blur()}
                   ref={editingTodoInput}
                   onBlur={() => {
                     onSetEditingTodoId(0);

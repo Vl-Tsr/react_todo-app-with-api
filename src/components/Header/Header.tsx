@@ -9,6 +9,7 @@ type Props = {
   newTodoTitle: string;
   setNewTodoTitle: React.Dispatch<React.SetStateAction<string>>;
   completedTodos: Todo[];
+  onToggleAll: () => void;
 };
 
 export const Header: React.FC<Props> = ({
@@ -19,11 +20,13 @@ export const Header: React.FC<Props> = ({
   newTodoTitle,
   setNewTodoTitle,
   completedTodos,
+  onToggleAll,
 }) => {
   return (
     <header className="todoapp__header">
       {!!todosLength && (
         <button
+          onClick={onToggleAll}
           type="button"
           className={classNames(
             'todoapp__toggle-all',

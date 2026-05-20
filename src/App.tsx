@@ -17,6 +17,7 @@ import { Header } from './components/Header/Header';
 import { Main } from './components/Main/Main';
 import { Footer } from './components/Footer/Footer';
 import { ErrorNotification } from './components/ErrorNotification/ErrorNotification';
+import { trim } from 'cypress/types/lodash';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -31,7 +32,6 @@ export const App: React.FC = () => {
     ErrorMessages.NoError,
   );
   const newTodoInput = useRef<HTMLInputElement>(null);
-
   const [editingTodoId, setEditingTodoId] = useState(0);
   const editingTodoInput = useRef<HTMLInputElement>(null);
 
@@ -117,28 +117,15 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleDeleteCompletedTodos = async () => {
-    await Promise.all(completedTodos.map(todo => handleDeleteTodo(todo.id)));
-  };
-
-  // const handleToggleTodo = async (
-  //   e: React.ChangeEvent<HTMLInputElement>,
-  //   id: number,
-  // ) => {
-  //   setUpdatingTodosId(prev => [...prev, id]);
-
-  //   try {
-  //     const updatedTodo = await patchTodo(id, { completed: e.target.checked });
-
-  //     setTodos(prev => [
-  //       ...prev.map(todo => (todo.id === id ? updatedTodo : todo)),
-  //     ]);
-  //   } catch (error) {
-  //     setErrorMessage(ErrorMessages.UpdateTodo);
-  //   } finally {
-  //     setUpdatingTodosId(prev => prev.filter(todoId => todoId !== id));
-  //   }
+  // const handleDeleteCompletedTodos = async () => {
+  //   await Promise.all(completedTodos.map(todo => handleDeleteTodo(todo.id)));
   // };
+
+  const handleDeleteCompletedTodos = () => {
+    completedTodos.forEach(todo => {
+      handleDeleteTodo(todo.id);
+    });
+  };
 
   const handleToggleTodo = async (id: number) => {
     const currentTodo = todos.find(todo => todo.id === id);
@@ -153,6 +140,49 @@ export const App: React.FC = () => {
       setTodos(prev => [
         ...prev.map(todo => (todo.id === id ? updatedTodo : todo)),
       ]);
+    } catch (error) {
+      setErrorMessage(ErrorMessages.UpdateTodo);
+    } finally {
+      setUpdatingTodosId(prev => prev.filter(todoId => todoId !== id));
+    }
+  };
+
+  const handleToggleAll = () => {
+    if (completedTodos.length < todos.length) {
+      todos
+        .filter(todo => todo.completed === false)
+        .forEach(todo => handleToggleTodo(todo.id));
+    } else {
+      todos.forEach(todo => handleToggleTodo(todo.id));
+    }
+  };
+
+  const handleEditTodo = async (id: number, title: string) => {
+    const trimValue = editingTodoInput.current?.value.trim();
+
+    if (title === trimValue) {
+      editingTodoInput.current?.blur();
+
+      return;
+    }
+
+    if (trimValue?.length === 0) {
+      handleDeleteTodo(id);
+
+      return;
+    }
+
+    setUpdatingTodosId(prev => [...prev, id]);
+
+    try {
+      const updatedTodo = await patchTodo(id, {
+        title: trimValue,
+      });
+
+      setTodos(prev => [
+        ...prev.map(todo => (todo.id === id ? updatedTodo : todo)),
+      ]);
+      setEditingTodoId(0);
     } catch (error) {
       setErrorMessage(ErrorMessages.UpdateTodo);
     } finally {
@@ -217,6 +247,7 @@ export const App: React.FC = () => {
           newTodoTitle={newTodoTitle}
           setNewTodoTitle={setNewTodoTitle}
           completedTodos={completedTodos}
+          onToggleAll={handleToggleAll}
         ></Header>
 
         <Main
@@ -229,6 +260,7 @@ export const App: React.FC = () => {
           tempTodoId={tempTodoId}
           editingTodoInput={editingTodoInput}
           onToggleTodo={handleToggleTodo}
+          onEditTodo={handleEditTodo}
         />
 
         {!!todos.length && (
