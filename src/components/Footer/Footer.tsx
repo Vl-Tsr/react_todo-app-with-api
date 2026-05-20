@@ -4,7 +4,7 @@ import { FilterOptions } from '../../types/FilterOptions';
 import { Todo } from '../../types/Todo';
 
 type Props = {
-  incompleteTodos: Todo[];
+  incompleteTodosLength: number;
   onSelectFilter: React.Dispatch<React.SetStateAction<FilterOptions>>;
   selectedFilter: FilterOptions;
   completedTodos: Todo[];
@@ -12,7 +12,7 @@ type Props = {
 };
 
 export const Footer: React.FC<Props> = ({
-  incompleteTodos,
+  incompleteTodosLength,
   onSelectFilter,
   selectedFilter,
   completedTodos,
@@ -21,7 +21,7 @@ export const Footer: React.FC<Props> = ({
   return (
     <footer className="todoapp__footer" data-cy="Footer">
       <span className="todo-count" data-cy="TodosCounter">
-        {incompleteTodos.length} items left
+        {incompleteTodosLength} items left
       </span>
 
       <nav className="filter" data-cy="Filter">

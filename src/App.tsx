@@ -1,7 +1,7 @@
 /* eslint-disable max-len */
 /* eslint-disable jsx-a11y/label-has-associated-control */
 /* eslint-disable jsx-a11y/control-has-associated-label */
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { UserWarning } from './UserWarning';
 import {
   deleteTodo,
@@ -17,7 +17,6 @@ import { Header } from './components/Header/Header';
 import { Main } from './components/Main/Main';
 import { Footer } from './components/Footer/Footer';
 import { ErrorNotification } from './components/ErrorNotification/ErrorNotification';
-import { trim } from 'cypress/types/lodash';
 
 export const App: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -31,33 +30,25 @@ export const App: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<ErrorMessages>(
     ErrorMessages.NoError,
   );
-  const newTodoInput = useRef<HTMLInputElement>(null);
   const [editingTodoId, setEditingTodoId] = useState(0);
+  const newTodoInput = useRef<HTMLInputElement>(null);
   const editingTodoInput = useRef<HTMLInputElement>(null);
-
-  const incompleteTodos = useMemo(
-    () => todos.filter(todo => !todo.completed && todo.id !== tempTodoId),
-    [todos, tempTodoId],
+  const incompleteTodos = todos.filter(
+    todo => !todo.completed && todo.id !== tempTodoId,
   );
-
   const completedTodos = todos.filter(todo => todo.completed);
+  const filteredTodos = todos.filter(todo => {
+    switch (selectedFilter) {
+      case 'Active':
+        return !todo.completed;
 
-  const filteredTodos = useMemo(
-    () =>
-      todos.filter(todo => {
-        switch (selectedFilter) {
-          case 'Active':
-            return !todo.completed;
+      case 'Completed':
+        return todo.completed;
 
-          case 'Completed':
-            return todo.completed;
-
-          default:
-            return true;
-        }
-      }),
-    [selectedFilter, todos],
-  );
+      default:
+        return true;
+    }
+  });
 
   const handleAddTodo = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -100,7 +91,7 @@ export const App: React.FC = () => {
     } finally {
       setIsSending(false);
       setTempTodoId(0);
-      setUpdatingTodosId([]);
+      setUpdatingTodosId(prev => prev.filter(todoId => todoId !== tempTodo.id));
     }
   };
 
@@ -116,10 +107,6 @@ export const App: React.FC = () => {
       setUpdatingTodosId(prev => prev.filter(todoId => todoId !== id));
     }
   };
-
-  // const handleDeleteCompletedTodos = async () => {
-  //   await Promise.all(completedTodos.map(todo => handleDeleteTodo(todo.id)));
-  // };
 
   const handleDeleteCompletedTodos = () => {
     completedTodos.forEach(todo => {
@@ -148,7 +135,7 @@ export const App: React.FC = () => {
   };
 
   const handleToggleAll = () => {
-    if (completedTodos.length < todos.length) {
+    if (todos.length > completedTodos.length) {
       todos
         .filter(todo => todo.completed === false)
         .forEach(todo => handleToggleTodo(todo.id));
@@ -240,36 +227,36 @@ export const App: React.FC = () => {
 
       <div className="todoapp__content">
         <Header
-          todosLength={todos.length}
           onAddTodo={handleAddTodo}
+          onToggleAll={handleToggleAll}
+          setNewTodoTitle={setNewTodoTitle}
+          todosLength={todos.length}
           isSending={isSending}
           newTodoInput={newTodoInput}
           newTodoTitle={newTodoTitle}
-          setNewTodoTitle={setNewTodoTitle}
           completedTodos={completedTodos}
-          onToggleAll={handleToggleAll}
         ></Header>
 
         <Main
           onDeleteTodo={handleDeleteTodo}
+          onSetEditingTodoId={setEditingTodoId}
+          onToggleTodo={handleToggleTodo}
+          onEditTodo={handleEditTodo}
           todosLength={todos.length}
           filteredTodos={filteredTodos}
           updatingTodosId={updatingTodosId}
-          onSetEditingTodoId={setEditingTodoId}
           editingTodoId={editingTodoId}
           tempTodoId={tempTodoId}
           editingTodoInput={editingTodoInput}
-          onToggleTodo={handleToggleTodo}
-          onEditTodo={handleEditTodo}
         />
 
         {!!todos.length && (
           <Footer
-            completedTodos={completedTodos}
-            incompleteTodos={incompleteTodos}
             onSelectFilter={setSelectedFilter}
-            selectedFilter={selectedFilter}
             onDeleteCompletedTodos={handleDeleteCompletedTodos}
+            completedTodos={completedTodos}
+            incompleteTodosLength={incompleteTodos.length}
+            selectedFilter={selectedFilter}
           />
         )}
       </div>
